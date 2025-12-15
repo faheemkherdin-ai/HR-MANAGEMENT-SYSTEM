@@ -1,0 +1,3799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Leave Management System - Kenya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+    <style>
+        /* ==============================================
+           CSS VARIABLES AND BASE STYLES
+           ============================================== */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --annual-color: #3498db;
+            --sick-color: #2ecc71;
+            --paternity-color: #9b59b6;
+            --maternity-color: #e74c3c;
+            --unpaid-color: #f39c12;
+            --compassionate-color: #34495e;
+            --hod-color: #9b59b6;
+            --hr-color: #3498db;
+            --management-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ==============================================
+           LOGIN PAGE STYLES
+           ============================================== */
+        .login-page {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            margin: 20px;
+        }
+
+        .kenya-theme {
+            background: linear-gradient(90deg, black 33%, red 33%, red 66%, green 66%);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        /* ==============================================
+           DASHBOARD STYLES
+           ============================================== */
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #1a252f 100%);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 5px;
+            margin: 2px 0;
+            display: block;
+            padding: 10px 15px;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar a.active {
+            background: var(--secondary-color);
+            border-left: 4px solid #2980b9;
+            font-weight: 600;
+        }
+
+        .main-content {
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==============================================
+           STAT CARDS AND WIDGETS
+           ============================================== */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+            border-left: 4px solid;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.annual { border-left-color: var(--annual-color); }
+        .stat-card.sick { border-left-color: var(--sick-color); }
+        .stat-card.paternity { border-left-color: var(--paternity-color); }
+        .stat-card.maternity { border-left-color: var(--maternity-color); }
+        .stat-card.unpaid { border-left-color: var(--unpaid-color); }
+        .stat-card.compassionate { border-left-color: var(--compassionate-color); }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* ==============================================
+           BADGES AND STATUS INDICATORS
+           ============================================== */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .badge-pending { background-color: #fff3cd; color: #856404; }
+        .badge-approved { background-color: #d4edda; color: #155724; }
+        .badge-rejected { background-color: #f8d7da; color: #721c24; }
+        .badge-cancelled { background-color: #e9ecef; color: #495057; }
+        .badge-hod { background-color: var(--hod-color); color: white; }
+        .badge-hr { background-color: var(--hr-color); color: white; }
+        .badge-management { background-color: var(--management-color); color: white; }
+
+        .leave-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .annual-badge { background: #e3f2fd; color: #1565c0; }
+        .sick-badge { background: #e8f5e9; color: #2e7d32; }
+        .paternity-badge { background: #f3e5f5; color: #7b1fa2; }
+        .maternity-badge { background: #ffebee; color: #c62828; }
+        .unpaid-badge { background: #fff8e1; color: #ff8f00; }
+        .compassionate-badge { background: #e8eaf6; color: #303f9f; }
+
+        /* ==============================================
+           TABLE STYLES
+           ============================================== */
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        /* ==============================================
+           FORM STYLES
+           ============================================== */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        /* ==============================================
+           MODAL STYLES
+           ============================================== */
+        .modal-xl {
+            max-width: 95%;
+        }
+
+        /* ==============================================
+           APPROVAL STEPS
+           ============================================== */
+        .approval-steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .approval-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            padding: 10px;
+        }
+
+        .approval-step.completed .step-number {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .approval-step.current .step-number {
+            background: #ffc107;
+            color: black;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .approval-line {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e9ecef;
+            z-index: -1;
+        }
+
+        /* ==============================================
+           BUTTON STYLES
+           ============================================== */
+        .btn-action {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* ==============================================
+           TOAST AND NOTIFICATIONS
+           ============================================== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .tooltip-inner {
+            max-width: 300px;
+        }
+
+        .kenyan-flag {
+            background: linear-gradient(90deg, black 33%, red 33%, red 66%, green 66%);
+            color: white;
+            border-radius: 5px;
+            padding: 5px 15px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* ==============================================
+           APPROVAL ACTIONS
+           ============================================== */
+        .approval-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+
+        .approval-card {
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            margin-bottom: 15px;
+        }
+
+        .approval-card:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* ==============================================
+           EMPLOYEE ACTIONS
+           ============================================== */
+        .employee-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        /* ==============================================
+           LOADING SPINNER
+           ============================================== */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        /* ==============================================
+           APPROVED/REJECTED LEAVES
+           ============================================== */
+        .approved-leave-item {
+            border-left: 4px solid #28a745;
+        }
+
+        .rejected-leave-item {
+            border-left: 4px solid #dc3545;
+        }
+
+        /* ==============================================
+           RESPONSIVE ADJUSTMENTS
+           ============================================== */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                height: 100%;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                z-index: 1000;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 15px;
+            }
+            
+            .stat-card {
+                margin-bottom: 15px;
+            }
+            
+            .mobile-menu-btn {
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 999;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px 12px;
+            }
+
+            .login-card {
+                margin: 15px;
+                padding: 20px !important;
+            }
+        }
+
+        /* ==============================================
+           CALENDAR STYLES
+           ============================================== */
+        .fc-event {
+            cursor: pointer;
+            border: none;
+            font-size: 11px;
+            padding: 2px 4px;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.2em;
+        }
+
+        /* ==============================================
+           PAGE CONTAINER
+           ============================================== */
+        .page-container {
+            display: none;
+        }
+
+        .page-container.active {
+            display: block;
+        }
+
+        /* ==============================================
+           NAVIGATION ARROWS
+           ============================================== */
+        .nav-arrows {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .nav-arrow {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            pointer-events: all;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .nav-arrow:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        .nav-arrow.prev {
+            margin-left: 10px;
+        }
+
+        .nav-arrow.next {
+            margin-right: 10px;
+        }
+
+        /* ==============================================
+           PROFILE SECTIONS
+           ============================================== */
+        .profile-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hod-profile { border-left: 4px solid var(--hod-color); }
+        .hr-profile { border-left: 4px solid var(--hr-color); }
+        .management-profile { border-left: 4px solid var(--management-color); }
+        .user-profile { border-left: 4px solid var(--secondary-color); }
+
+        .role-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .role-badge.hod { background: var(--hod-color); }
+        .role-badge.hr { background: var(--hr-color); }
+        .role-badge.management { background: var(--management-color); }
+        .role-badge.user { background: var(--secondary-color); }
+        .role-badge.admin { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="loadingSpinner">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="successToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">HR System</strong>
+            <small>Just now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmationMessage">Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Leave Modal -->
+    <div class="modal fade" id="viewLeaveModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Leave Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="leaveDetailsContent">
+                    Loading details...
+                </div>
+                <div class="modal-footer" id="leaveDetailsFooter">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" placeholder="Enter your email">
+                    </div>
+                    <p class="text-muted small">A password reset link will be sent to your email.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Send Reset Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="page-container active">
+        <div class="login-page">
+            <div class="login-card p-5">
+                <div class="text-center mb-4">
+                    <div class="kenya-theme mb-3">KENYA HR SYSTEM</div>
+                    <h3 class="fw-bold">HR Leave Management</h3>
+                    <p class="text-muted">Please sign in to continue</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                    </button>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                            Forgot password?
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page-container">
+        <!-- Navigation Arrows -->
+        <div class="nav-arrows">
+            <button class="nav-arrow prev" onclick="navigateBack()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="nav-arrow next" onclick="navigateForward()">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <nav class="col-md-3 col-lg-2 sidebar d-md-block">
+                    <div class="position-sticky pt-3">
+                        <div class="text-center mb-4">
+                            <div class="kenyan-flag mb-2">KENYA HR SYSTEM</div>
+                            <h5 class="text-white">Leave Management</h5>
+                        </div>
+                        
+                        <div class="mb-4 text-center">
+                            <div class="avatar mx-auto mb-2" id="userAvatar">AD</div>
+                            <h6 class="text-white mb-1" id="userName">Admin User</h6>
+                            <small class="text-muted" id="userRole">Administrator</small>
+                        </div>
+                        
+                        <ul class="nav flex-column" id="sidebarMenu">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#dashboard">
+                                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#calendar">
+                                    <i class="bi bi-calendar me-2"></i> Calendar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#employees">
+                                    <i class="bi bi-people me-2"></i> Employees
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#my-leaves">
+                                    <i class="bi bi-file-text me-2"></i> My Leaves
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#apply-leave">
+                                    <i class="bi bi-plus-circle me-2"></i> Apply Leave
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#approvals">
+                                    <i class="bi bi-check2-square me-2"></i> Approvals
+                                    <span class="badge bg-danger ms-2" id="pendingBadge">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#profile">
+                                    <i class="bi bi-person-circle me-2"></i> Profile
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#hod-section">
+                                    <i class="bi bi-shield-check me-2"></i> HOD Section
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#hr-section">
+                                    <i class="bi bi-briefcase me-2"></i> HR Section
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#management-section">
+                                    <i class="bi bi-award me-2"></i> Management
+                                </a>
+                            </li>
+                            <li class="nav-item mt-4">
+                                <a class="nav-link text-danger" href="#" id="logoutBtn">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-4 pt-3 border-top">
+                            <small class="text-muted d-block text-center">Version 1.0.0</small>
+                            <small class="text-muted d-block text-center">Kenya HR System © 2024</small>
+                        </div>
+                    </div>
+                </nav>
+                
+                <!-- Main Content -->
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                    <!-- Mobile Menu Button -->
+                    <button class="btn btn-primary mobile-menu-btn d-md-none" onclick="toggleSidebar()">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2" id="pageTitle">Dashboard</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportData()">
+                                    <i class="bi bi-download me-1"></i> Export
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="generateReport()">
+                                    <i class="bi bi-file-earmark-text me-1"></i> Report
+                                </button>
+                            </div>
+                            <div class="me-3 text-end">
+                                <small class="text-muted d-block" id="currentDate"></small>
+                                <small class="text-muted" id="currentTime"></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Content -->
+                    <div class="content-section active" id="dashboard">
+                        <!-- Leave Statistics -->
+                        <div class="row mb-4" id="leaveStats">
+                            <!-- Stats will be loaded by JavaScript -->
+                        </div>
+                        
+                        <!-- Recent Leaves -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Recent Leave Applications</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Employee</th>
+                                                        <th>Type</th>
+                                                        <th>Duration</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="recentLeavesTable">
+                                                    <!-- Recent leaves will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Upcoming Leaves</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="upcomingLeavesList">
+                                            <!-- Upcoming leaves will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Section -->
+                    <div class="content-section" id="calendar">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Leave Calendar</h5>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-primary btn-sm" id="calendarPrev">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm" id="calendarToday">Today</button>
+                                        <button class="btn btn-outline-primary btn-sm" id="calendarNext">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" id="addEventBtn">
+                                            <i class="bi bi-plus"></i> Add Leave
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="calendarContainer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Employees Section -->
+                    <div class="content-section" id="employees">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Employee Management</h5>
+                                <button class="btn btn-primary" id="addEmployeeBtn">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Employee
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Employee ID</th>
+                                                <th>Department</th>
+                                                <th>Position</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="employeesTable">
+                                            <!-- Employees will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- My Leaves Section -->
+                    <div class="content-section" id="my-leaves">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">My Leave Applications</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Application ID</th>
+                                                <th>Type</th>
+                                                <th>Period</th>
+                                                <th>Duration</th>
+                                                <th>Status</th>
+                                                <th>Stage</th>
+                                                <th>Applied Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="myLeavesTable">
+                                            <!-- My leaves will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Apply Leave Section -->
+                    <div class="content-section" id="apply-leave">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Apply for Leave</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="leaveApplicationForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Leave Type</label>
+                                                <select class="form-select" id="leaveType" required>
+                                                    <option value="">Select Leave Type</option>
+                                                    <option value="annual">Annual Leave</option>
+                                                    <option value="sick">Sick Leave</option>
+                                                    <option value="paternity">Paternity Leave</option>
+                                                    <option value="maternity">Maternity Leave</option>
+                                                    <option value="unpaid">Unpaid Leave</option>
+                                                    <option value="compassionate">Compassionate Leave</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Leave Category</label>
+                                                <select class="form-select" id="leaveCategory" required>
+                                                    <option value="full">Full Day</option>
+                                                    <option value="half">Half Day</option>
+                                                    <option value="multiple">Multiple Days</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Start Date</label>
+                                                        <input type="date" class="form-control" id="leaveStartDate" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">End Date</label>
+                                                        <input type="date" class="form-control" id="leaveEndDate" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Total Working Days</label>
+                                                <input type="text" class="form-control" id="totalDays" readonly>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Calendar Days</label>
+                                                <input type="text" class="form-control" id="calendarDays" readonly>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Reason for Leave</label>
+                                                <textarea class="form-control" id="leaveReason" rows="3" required></textarea>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Handover Notes</label>
+                                                <textarea class="form-control" id="handoverNotes" rows="3" placeholder="Brief details of pending work and handover arrangements..."></textarea>
+                                            </div>
+                                            
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">Leave Balance</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-2">
+                                                        <small class="text-muted">Annual Leave</small>
+                                                        <p class="mb-1" id="balanceAnnual">0 days remaining</p>
+                                                        <div class="progress" style="height: 5px;">
+                                                            <div class="progress-bar bg-primary" style="width: 75%"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <small class="text-muted">Sick Leave</small>
+                                                        <p class="mb-1" id="balanceSick">0 days remaining</p>
+                                                        <div class="progress" style="height: 5px;">
+                                                            <div class="progress-bar bg-success" style="width: 90%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="bi bi-send me-2"></i> Submit Application
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Approvals Section -->
+                    <div class="content-section" id="approvals">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Leave Approvals</h5>
+                                    <div class="btn-group" id="approvalTabs">
+                                        <button class="btn btn-outline-primary active" data-tab="pending">
+                                            Pending <span class="badge bg-danger ms-1" id="pendingCount">0</span>
+                                        </button>
+                                        <button class="btn btn-outline-primary" data-tab="approved">
+                                            Approved <span class="badge bg-success ms-1" id="approvedCount">0</span>
+                                        </button>
+                                        <button class="btn btn-outline-primary" data-tab="rejected">
+                                            Rejected <span class="badge bg-secondary ms-1" id="rejectedCount">0</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="pendingApprovalsContent">
+                                    <div class="row" id="pendingApprovalsList">
+                                        <!-- Pending approvals will be loaded here -->
+                                    </div>
+                                </div>
+                                <div id="approvedLeavesContent" style="display: none;">
+                                    <div class="row" id="approvedLeavesList">
+                                        <!-- Approved leaves will be loaded here -->
+                                    </div>
+                                </div>
+                                <div id="rejectedLeavesContent" style="display: none;">
+                                    <div class="row" id="rejectedLeavesList">
+                                        <!-- Rejected leaves will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Section -->
+                    <div class="content-section" id="profile">
+                        <div id="profileContent">
+                            <!-- Profile content will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- HOD Section -->
+                    <div class="content-section" id="hod-section">
+                        <div class="hod-profile profile-section">
+                            <h3><i class="bi bi-shield-check me-2"></i> HOD Dashboard</h3>
+                            <p class="text-muted">Head of Department - Leave Approval Management</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">Pending HOD Approvals</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Employee</th>
+                                                            <th>Department</th>
+                                                            <th>Leave Type</th>
+                                                            <th>Period</th>
+                                                            <th>Duration</th>
+                                                            <th>Applied Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="hodApprovalsTable">
+                                                        <!-- HOD approvals will be loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- HR Section -->
+                    <div class="content-section" id="hr-section">
+                        <div class="hr-profile profile-section">
+                            <h3><i class="bi bi-briefcase me-2"></i> HR Dashboard</h3>
+                            <p class="text-muted">Human Resources - Leave Management</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h5 class="mb-0">Pending HR Approvals</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Employee</th>
+                                                            <th>Department</th>
+                                                            <th>Leave Type</th>
+                                                            <th>Period</th>
+                                                            <th>Duration</th>
+                                                            <th>HOD Status</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="hrApprovalsTable">
+                                                        <!-- HR approvals will be loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Management Section -->
+                    <div class="content-section" id="management-section">
+                        <div class="management-profile profile-section">
+                            <h3><i class="bi bi-award me-2"></i> Senior Management Dashboard</h3>
+                            <p class="text-muted">Final Approval Authority</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5 class="mb-0">Pending Management Approvals</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Employee</th>
+                                                            <th>Department</th>
+                                                            <th>Leave Type</th>
+                                                            <th>Period</th>
+                                                            <th>Duration</th>
+                                                            <th>HOD Status</th>
+                                                            <th>HR Status</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="managementApprovalsTable">
+                                                        <!-- Management approvals will be loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@2.3.0/build/global/luxon.min.js"></script>
+
+    <script>
+        // ==============================================
+        // HR LEAVE MANAGEMENT SYSTEM - KENYA
+        // ==============================================
+
+        // Kenyan Public Holidays 2024
+        const KENYAN_HOLIDAYS_2024 = [
+            { date: '2024-01-01', name: 'New Year\'s Day' },
+            { date: '2024-03-29', name: 'Good Friday' },
+            { date: '2024-04-01', name: 'Easter Monday' },
+            { date: '2024-05-01', name: 'Labour Day' },
+            { date: '2024-06-01', name: 'Madaraka Day' },
+            { date: '2024-10-10', name: 'Moi Day' },
+            { date: '2024-10-20', name: 'Mashujaa Day' },
+            { date: '2024-12-12', name: 'Jamhuri Day' },
+            { date: '2024-12-25', name: 'Christmas Day' },
+            { date: '2024-12-26', name: 'Boxing Day' }
+        ];
+
+        // Storage keys
+        const STORAGE_KEYS = {
+            USERS: 'hrms_users',
+            LEAVES: 'hrms_leaves',
+            CURRENT_USER: 'hrms_current_user',
+            SETTINGS: 'hrms_settings'
+        };
+
+        // Default data - UPDATED PASSWORDS
+        const defaultData = {
+            users: [
+                {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin_123', // Admin password
+                    firstName: 'System',
+                    lastName: 'Administrator',
+                    email: 'admin@company.co.ke',
+                    employeeId: 'ADMIN001',
+                    department: 'Administration',
+                    position: 'System Administrator',
+                    role: 'admin',
+                    joinDate: '2020-01-01',
+                    status: 'active',
+                    annualLeave: 30,
+                    sickLeave: 30,
+                    paternityLeave: 14,
+                    maternityLeave: 90,
+                    compassionateLeave: 14,
+                    usedAnnual: 5,
+                    usedSick: 2,
+                    usedPaternity: 0,
+                    usedMaternity: 0,
+                    usedCompassionate: 0
+                },
+                {
+                    id: 2,
+                    username: 'user',
+                    password: 'user_123', // User password
+                    firstName: 'John',
+                    lastName: 'Kamau',
+                    email: 'john.kamau@company.co.ke',
+                    employeeId: 'EMP001',
+                    department: 'Sales',
+                    position: 'Sales Executive',
+                    role: 'user',
+                    joinDate: '2023-01-15',
+                    status: 'active',
+                    annualLeave: 21,
+                    sickLeave: 30,
+                    paternityLeave: 14,
+                    maternityLeave: 90,
+                    compassionateLeave: 7,
+                    usedAnnual: 7,
+                    usedSick: 3,
+                    usedPaternity: 0,
+                    usedMaternity: 0,
+                    usedCompassionate: 0
+                },
+                {
+                    id: 3,
+                    username: 'hod',
+                    password: 'user_123', // HOD password
+                    firstName: 'Sarah',
+                    lastName: 'Wanjiku',
+                    email: 'sarah.wanjiku@company.co.ke',
+                    employeeId: 'HOD001',
+                    department: 'Sales',
+                    position: 'Head of Sales',
+                    role: 'hod',
+                    joinDate: '2021-03-10',
+                    status: 'active',
+                    annualLeave: 30,
+                    sickLeave: 30,
+                    paternityLeave: 14,
+                    maternityLeave: 90,
+                    compassionateLeave: 14,
+                    usedAnnual: 10,
+                    usedSick: 4,
+                    usedPaternity: 0,
+                    usedMaternity: 0,
+                    usedCompassionate: 2
+                },
+                {
+                    id: 4,
+                    username: 'hr',
+                    password: 'user_123', // HR password
+                    firstName: 'David',
+                    lastName: 'Ochieng',
+                    email: 'david.ochieng@company.co.ke',
+                    employeeId: 'HR001',
+                    department: 'Human Resources',
+                    position: 'HR Manager',
+                    role: 'hr',
+                    joinDate: '2020-06-01',
+                    status: 'active',
+                    annualLeave: 30,
+                    sickLeave: 30,
+                    paternityLeave: 14,
+                    maternityLeave: 90,
+                    compassionateLeave: 14,
+                    usedAnnual: 15,
+                    usedSick: 5,
+                    usedPaternity: 0,
+                    usedMaternity: 0,
+                    usedCompassionate: 3
+                },
+                {
+                    id: 5,
+                    username: 'management',
+                    password: 'user_123', // Management password
+                    firstName: 'Michael',
+                    lastName: 'Kipchoge',
+                    email: 'michael.kipchoge@company.co.ke',
+                    employeeId: 'MGT001',
+                    department: 'Executive',
+                    position: 'Managing Director',
+                    role: 'management',
+                    joinDate: '2019-01-01',
+                    status: 'active',
+                    annualLeave: 30,
+                    sickLeave: 30,
+                    paternityLeave: 14,
+                    maternityLeave: 90,
+                    compassionateLeave: 14,
+                    usedAnnual: 20,
+                    usedSick: 8,
+                    usedPaternity: 0,
+                    usedMaternity: 0,
+                    usedCompassionate: 5
+                }
+            ],
+            leaves: [],
+            settings: {
+                companyName: 'Kenyan Enterprises Ltd',
+                leaveYear: '2024',
+                approvalWorkflow: true,
+                country: 'Kenya',
+                approvalStages: ['hod', 'hr', 'management']
+            }
+        };
+
+        // Global variables
+        let calendar = null;
+        let currentUser = null;
+        let currentSection = 'dashboard';
+
+        // ==============================================
+        // INITIALIZATION
+        // ==============================================
+
+        function initializeStorage() {
+            // Clear any old data first
+            localStorage.clear();
+            
+            // Set default data
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultData.users));
+            localStorage.setItem(STORAGE_KEYS.LEAVES, JSON.stringify(defaultData.leaves));
+            localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(defaultData.settings));
+            
+            console.log('Storage initialized with correct passwords');
+        }
+
+        // Data management functions
+        const DataManager = {
+            getUsers: () => {
+                const users = localStorage.getItem(STORAGE_KEYS.USERS);
+                if (!users) {
+                    initializeStorage();
+                    return defaultData.users;
+                }
+                return JSON.parse(users) || defaultData.users;
+            },
+            saveUsers: (users) => localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)),
+            
+            getLeaves: () => {
+                const leaves = localStorage.getItem(STORAGE_KEYS.LEAVES);
+                return leaves ? JSON.parse(leaves) : [];
+            },
+            saveLeaves: (leaves) => localStorage.setItem(STORAGE_KEYS.LEAVES, JSON.stringify(leaves)),
+            
+            getCurrentUser: () => {
+                const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+                if (userData) {
+                    return JSON.parse(userData);
+                }
+                const username = localStorage.getItem('username');
+                const users = DataManager.getUsers();
+                return users.find(u => u.username === username) || null;
+            },
+            saveCurrentUser: (user) => localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user)),
+            
+            getSettings: () => {
+                const settings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+                return settings ? JSON.parse(settings) : defaultData.settings;
+            },
+            saveSettings: (settings) => localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings))
+        };
+
+        // ==============================================
+        // UTILITY FUNCTIONS
+        // ==============================================
+
+        function showToast(message, type = 'success') {
+            const toastEl = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+            
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
+        }
+
+        function showSection(sectionId) {
+            currentSection = sectionId;
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.querySelectorAll('#sidebarMenu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('active');
+                
+                const sidebarLink = document.querySelector(`#sidebarMenu a[href="#${sectionId}"]`);
+                if (sidebarLink) {
+                    sidebarLink.classList.add('active');
+                }
+                
+                // Update page title
+                const titles = {
+                    'dashboard': 'Dashboard',
+                    'calendar': 'Leave Calendar',
+                    'employees': 'Employee Management',
+                    'my-leaves': 'My Leave Applications',
+                    'apply-leave': 'Apply for Leave',
+                    'approvals': 'Leave Approvals',
+                    'profile': 'My Profile',
+                    'hod-section': 'HOD Dashboard',
+                    'hr-section': 'HR Dashboard',
+                    'management-section': 'Senior Management Dashboard'
+                };
+                document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
+                
+                loadSectionData(sectionId);
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function generateId() {
+            return Date.now() + Math.floor(Math.random() * 1000);
+        }
+
+        function getLeaveTypeColor(type) {
+            const colors = {
+                'annual': '#3498db',
+                'sick': '#2ecc71',
+                'paternity': '#9b59b6',
+                'maternity': '#e74c3c',
+                'unpaid': '#f39c12',
+                'compassionate': '#34495e'
+            };
+            return colors[type] || '#95a5a6';
+        }
+
+        function getLeaveTypeName(type) {
+            const names = {
+                'annual': 'Annual Leave',
+                'sick': 'Sick Leave',
+                'paternity': 'Paternity Leave',
+                'maternity': 'Maternity Leave',
+                'unpaid': 'Unpaid Leave',
+                'compassionate': 'Compassionate Leave'
+            };
+            return names[type] || 'Leave';
+        }
+
+        function getLeaveTypeBadge(type) {
+            const badges = {
+                'annual': 'annual-badge',
+                'sick': 'sick-badge',
+                'paternity': 'paternity-badge',
+                'maternity': 'maternity-badge',
+                'unpaid': 'unpaid-badge',
+                'compassionate': 'compassionate-badge'
+            };
+            return badges[type] || 'badge-secondary';
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'pending': 'badge-pending',
+                'approved': 'badge-approved',
+                'rejected': 'badge-rejected',
+                'cancelled': 'badge-cancelled'
+            };
+            return classes[status] || 'badge-secondary';
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': 'Pending',
+                'approved': 'Approved',
+                'rejected': 'Rejected',
+                'cancelled': 'Cancelled'
+            };
+            return texts[status] || status;
+        }
+
+        function getRoleText(role) {
+            const texts = {
+                'admin': 'Administrator',
+                'hod': 'Head of Department',
+                'hr': 'Human Resources',
+                'management': 'Senior Management',
+                'user': 'Employee'
+            };
+            return texts[role] || role;
+        }
+
+        function getRoleBadgeClass(role) {
+            const classes = {
+                'admin': 'role-badge admin',
+                'hod': 'role-badge hod',
+                'hr': 'role-badge hr',
+                'management': 'role-badge management',
+                'user': 'role-badge user'
+            };
+            return classes[role] || 'role-badge user';
+        }
+
+        function calculateLeaveDays(startDate, endDate, leaveType) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const calendarDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            if (['paternity', 'maternity', 'compassionate'].includes(leaveType)) {
+                return {
+                    calendarDays: calendarDays,
+                    workingDays: calendarDays,
+                    description: `${calendarDays} calendar days`
+                };
+            }
+            
+            let workingDays = 0;
+            
+            for (let i = 0; i < calendarDays; i++) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + i);
+                
+                if (date.getDay() !== 0) {
+                    const dateStr = date.toISOString().split('T')[0];
+                    const isHoliday = KENYAN_HOLIDAYS_2024.some(holiday => holiday.date === dateStr);
+                    
+                    if (!isHoliday) {
+                        workingDays++;
+                    }
+                }
+            }
+            
+            return {
+                calendarDays: calendarDays,
+                workingDays: workingDays,
+                description: `${workingDays} working days (${calendarDays} calendar days)`
+            };
+        }
+
+        function showConfirmation(title, message, callback) {
+            document.getElementById('confirmationTitle').textContent = title;
+            document.getElementById('confirmationMessage').textContent = message;
+            
+            document.getElementById('confirmActionBtn').onclick = function() {
+                callback();
+                bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+            };
+            
+            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            modal.show();
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        }
+
+        // Navigation functions
+        function navigateBack() {
+            const sections = ['dashboard', 'calendar', 'employees', 'my-leaves', 'apply-leave', 'approvals', 'profile', 'hod-section', 'hr-section', 'management-section'];
+            const currentIndex = sections.indexOf(currentSection);
+            if (currentIndex > 0) {
+                showSection(sections[currentIndex - 1]);
+            }
+        }
+
+        function navigateForward() {
+            const sections = ['dashboard', 'calendar', 'employees', 'my-leaves', 'apply-leave', 'approvals', 'profile', 'hod-section', 'hr-section', 'management-section'];
+            const currentIndex = sections.indexOf(currentSection);
+            if (currentIndex < sections.length - 1) {
+                showSection(sections[currentIndex + 1]);
+            }
+        }
+
+        // ==============================================
+        // AUTHENTICATION AND PAGE MANAGEMENT
+        // ==============================================
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function checkAuth() {
+            const loggedIn = localStorage.getItem('loggedIn');
+            const username = localStorage.getItem('username');
+            
+            if (!loggedIn || !username) {
+                showPage('loginPage');
+                return false;
+            }
+            
+            const users = DataManager.getUsers();
+            currentUser = users.find(u => u.username === username);
+            
+            if (!currentUser) {
+                showPage('loginPage');
+                return false;
+            }
+            
+            DataManager.saveCurrentUser(currentUser);
+            updateUserUI();
+            showPage('dashboardPage');
+            initializeDashboard();
+            return true;
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+            
+            document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+            document.getElementById('userAvatar').textContent = 
+                currentUser.firstName[0] + currentUser.lastName[0];
+            
+            // Hide sections based on role
+            const hodSection = document.querySelector('a[href="#hod-section"]').parentElement;
+            const hrSection = document.querySelector('a[href="#hr-section"]').parentElement;
+            const managementSection = document.querySelector('a[href="#management-section"]').parentElement;
+            
+            if (currentUser.role !== 'hod' && currentUser.role !== 'admin') {
+                hodSection.style.display = 'none';
+            }
+            if (currentUser.role !== 'hr' && currentUser.role !== 'admin') {
+                hrSection.style.display = 'none';
+            }
+            if (currentUser.role !== 'management' && currentUser.role !== 'admin') {
+                managementSection.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('loggedIn');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                currentUser = null;
+                showPage('loginPage');
+            }
+        }
+
+        // ==============================================
+        // LOGIN PAGE FUNCTIONS - FIXED (NO TEST BUTTON)
+        // ==============================================
+
+        function initializeLogin() {
+            // Initialize storage first
+            initializeStorage();
+            
+            // Toggle password visibility
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+            
+            // Handle login form submission
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                // Get users from storage
+                const users = DataManager.getUsers();
+                
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                if (user) {
+                    // Store login state
+                    localStorage.setItem('loggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('role', user.role);
+                    
+                    currentUser = user;
+                    DataManager.saveCurrentUser(currentUser);
+                    updateUserUI();
+                    showPage('dashboardPage');
+                    initializeDashboard();
+                    showToast('Login successful!');
+                } else {
+                    showToast('Invalid username or password', 'error');
+                }
+            });
+            
+            // Check if already logged in
+            if (localStorage.getItem('loggedIn') === 'true') {
+                checkAuth();
+            }
+        }
+
+        // ==============================================
+        // DASHBOARD FUNCTIONS
+        // ==============================================
+
+        function initializeDashboard() {
+            if (!currentUser) return;
+            
+            // Setup navigation
+            document.querySelectorAll('#sidebarMenu a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('href').substring(1);
+                    showSection(sectionId);
+                });
+            });
+            
+            // Setup logout button
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+            
+            // Setup add employee button
+            document.getElementById('addEmployeeBtn')?.addEventListener('click', function() {
+                showAddEmployeeModal();
+            });
+            
+            // Setup leave application form
+            setupLeaveApplication();
+            
+            // Load initial data
+            loadDashboard();
+            
+            // Show current date and time
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = 
+                now.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function loadDashboard() {
+            if (!currentUser) return;
+            
+            updateDateTime();
+            loadLeaveStatistics();
+            loadRecentLeavesTable();
+            loadUpcomingLeaves();
+        }
+
+        function loadLeaveStatistics() {
+            const container = document.getElementById('leaveStats');
+            const leaves = DataManager.getLeaves();
+            
+            // Get pending leaves count for badge
+            const pendingLeaves = leaves.filter(l => l.status === 'pending');
+            document.getElementById('pendingBadge').textContent = pendingLeaves.length;
+            
+            // Get user's leaves for statistics
+            const userLeaves = leaves.filter(l => l.employeeId === currentUser.id);
+            
+            // Create statistics cards
+            const leaveTypes = [
+                { type: 'annual', icon: 'bi-sun', color: 'var(--annual-color)', name: 'Annual Leave' },
+                { type: 'sick', icon: 'bi-heart-pulse', color: 'var(--sick-color)', name: 'Sick Leave' },
+                { type: 'paternity', icon: 'bi-person', color: 'var(--paternity-color)', name: 'Paternity' },
+                { type: 'maternity', icon: 'bi-heart', color: 'var(--maternity-color)', name: 'Maternity' },
+                { type: 'unpaid', icon: 'bi-cash', color: 'var(--unpaid-color)', name: 'Unpaid Leave' },
+                { type: 'compassionate', icon: 'bi-flower1', color: 'var(--compassionate-color)', name: 'Compassionate' }
+            ];
+            
+            let html = '';
+            leaveTypes.forEach(leave => {
+                const balance = leave.type === 'unpaid' ? '∞' : 
+                               (currentUser[`${leave.type}Leave`] || 0) - (currentUser[`used${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)}`] || 0);
+                const used = currentUser[`used${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)}`] || 0;
+                
+                html += `
+                    <div class="col-md-4 col-lg-2">
+                        <div class="stat-card ${leave.type}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-muted">${leave.name}</h6>
+                                    <h2 class="text-primary">${balance}</h2>
+                                    <small class="text-muted">${used} days used</small>
+                                </div>
+                                <div class="avatar" style="background: ${getLeaveTypeColor(leave.type)};">
+                                    <i class="bi ${leave.icon}"></i>
+                                </div>
+                            </div>
+                            ${currentUser.role === 'user' ? `
+                            <button class="btn btn-sm btn-outline-primary mt-3 w-100" onclick="applyLeave('${leave.type}')">
+                                <i class="bi bi-plus-circle me-1"></i> Apply
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function loadRecentLeavesTable() {
+            const leaves = DataManager.getLeaves();
+            const tbody = document.getElementById('recentLeavesTable');
+            
+            // Get last 10 leaves for admin, user's leaves for regular users
+            let recentLeaves = [];
+            if (currentUser.role === 'admin' || currentUser.role === 'hod' || currentUser.role === 'hr' || currentUser.role === 'management') {
+                recentLeaves = leaves.slice(-10).reverse();
+            } else {
+                recentLeaves = leaves.filter(l => l.employeeId === currentUser.id).slice(-10).reverse();
+            }
+            
+            let html = '';
+            if (recentLeaves.length > 0) {
+                recentLeaves.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    html += `
+                        <tr>
+                            <td>${formatDate(leave.startDate)}</td>
+                            <td>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</td>
+                            <td>
+                                <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                    ${getLeaveTypeName(leave.type)}
+                                </span>
+                            </td>
+                            <td>${leave.workingDays} days</td>
+                            <td>
+                                <span class="status-badge ${getStatusClass(leave.status)}">
+                                    ${getStatusText(leave.status)}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLeaveDetails(${leave.id})" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-calendar-x fs-4 d-block mb-2"></i>
+                            No leave requests found
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        function loadUpcomingLeaves() {
+            const leaves = DataManager.getLeaves();
+            const container = document.getElementById('upcomingLeavesList');
+            const now = new Date();
+            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            // Get upcoming approved leaves
+            let upcomingLeaves = leaves.filter(leave => 
+                leave.status === 'approved' &&
+                new Date(leave.startDate) >= now &&
+                new Date(leave.startDate) <= nextWeek
+            ).slice(0, 5);
+            
+            // For non-admin users, only show their own leaves
+            if (currentUser.role === 'user') {
+                upcomingLeaves = upcomingLeaves.filter(leave => leave.employeeId === currentUser.id);
+            }
+            
+            let html = '';
+            if (upcomingLeaves.length > 0) {
+                upcomingLeaves.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    html += `
+                        <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                            <div class="avatar me-3" style="background: ${getLeaveTypeColor(leave.type)}; width: 30px; height: 30px; font-size: 12px;">
+                                ${user ? user.firstName[0] + user.lastName[0] : leave.employeeName.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</strong>
+                                    <small class="text-muted">${leave.workingDays}d</small>
+                                </div>
+                                <div class="text-muted">
+                                    <small>${getLeaveTypeName(leave.type)} • ${formatDate(leave.startDate)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-check fs-4 d-block mb-2"></i>
+                        No upcoming leaves
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // ==============================================
+        // EMPLOYEE MANAGEMENT FUNCTIONS
+        // ==============================================
+
+        function loadEmployees() {
+            const users = DataManager.getUsers();
+            const tbody = document.getElementById('employeesTable');
+            
+            // Show all users except current user for admin, only their own for others
+            let employees = [];
+            if (currentUser.role === 'admin') {
+                employees = users;
+            } else {
+                employees = [currentUser];
+            }
+            
+            let html = '';
+            employees.forEach(user => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-3">
+                                    ${user.firstName[0]}${user.lastName[0]}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${user.firstName} ${user.lastName}</div>
+                                    <small class="text-muted">${user.email}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.employeeId}</td>
+                        <td>${user.department}</td>
+                        <td>${user.position}</td>
+                        <td>
+                            <span class="${getRoleBadgeClass(user.role)}">
+                                ${getRoleText(user.role)}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge ${user.status === 'active' ? 'badge-approved' : 'badge-secondary'}">
+                                ${user.status}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="employee-actions">
+                                <button class="btn btn-sm btn-outline-info" onclick="viewUserDetails(${user.id})" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function showAddEmployeeModal() {
+            const html = `
+                <div class="modal fade" id="addEmployeeModal">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Add New Employee</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="addEmployeeForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">First Name</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Username</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Password</label>
+                                                <input type="password" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Employee ID</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Department</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Position</label>
+                                                <input type="text" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Role</label>
+                                                <select class="form-select" required>
+                                                    <option value="user">Employee</option>
+                                                    <option value="hod">Head of Department</option>
+                                                    <option value="hr">Human Resources</option>
+                                                    <option value="management">Senior Management</option>
+                                                    <option value="admin">Administrator</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Join Date</label>
+                                                <input type="date" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveNewEmployee()">Save Employee</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('addEmployeeModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', html);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+            modal.show();
+        }
+
+        function saveNewEmployee() {
+            const form = document.getElementById('addEmployeeForm');
+            const inputs = form.querySelectorAll('input, select');
+            
+            const newEmployee = {
+                id: generateId(),
+                username: inputs[2].value,
+                password: inputs[3].value,
+                firstName: inputs[0].value,
+                lastName: inputs[1].value,
+                email: inputs[4].value,
+                employeeId: inputs[5].value,
+                department: inputs[6].value,
+                position: inputs[7].value,
+                role: inputs[8].value,
+                joinDate: inputs[9].value,
+                status: 'active',
+                annualLeave: 21,
+                sickLeave: 30,
+                paternityLeave: 14,
+                maternityLeave: 90,
+                compassionateLeave: 7,
+                usedAnnual: 0,
+                usedSick: 0,
+                usedPaternity: 0,
+                usedMaternity: 0,
+                usedCompassionate: 0
+            };
+            
+            const users = DataManager.getUsers();
+            users.push(newEmployee);
+            DataManager.saveUsers(users);
+            
+            bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+            loadEmployees();
+            showToast('Employee added successfully');
+        }
+
+        function viewUserDetails(userId) {
+            const users = DataManager.getUsers();
+            const user = users.find(u => u.id === userId);
+            
+            if (!user) {
+                showToast('User not found', 'error');
+                return;
+            }
+            
+            const html = `
+                <div class="modal fade" id="viewUserModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Employee Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="text-center mb-4">
+                                    <div class="avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                                        ${user.firstName[0]}${user.lastName[0]}
+                                    </div>
+                                    <h4>${user.firstName} ${user.lastName}</h4>
+                                    <p class="text-muted">${user.position}</p>
+                                    <span class="${getRoleBadgeClass(user.role)}">
+                                        ${getRoleText(user.role)}
+                                    </span>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Email:</strong><br>${user.email}</p>
+                                        <p><strong>Employee ID:</strong><br>${user.employeeId}</p>
+                                        <p><strong>Department:</strong><br>${user.department}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Join Date:</strong><br>${formatDate(user.joinDate)}</p>
+                                        <p><strong>Status:</strong><br><span class="badge ${user.status === 'active' ? 'bg-success' : 'bg-secondary'}">${user.status}</span></p>
+                                        <p><strong>Username:</strong><br>${user.username}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>Leave Balance</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small>Annual Leave:</small>
+                                            <p class="mb-1">${user.annualLeave - user.usedAnnual} days remaining</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <small>Sick Leave:</small>
+                                            <p class="mb-1">${user.sickLeave - user.usedSick} days remaining</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button type="button" class="btn btn-primary" onclick="editUser(${user.id})">Edit</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('viewUserModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', html);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+            modal.show();
+        }
+
+        function editUser(userId) {
+            const users = DataManager.getUsers();
+            const user = users.find(u => u.id === userId);
+            
+            if (!user) {
+                showToast('User not found', 'error');
+                return;
+            }
+            
+            const html = `
+                <div class="modal fade" id="editUserModal">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Employee</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editUserForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">First Name</label>
+                                                <input type="text" class="form-control" value="${user.firstName}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" value="${user.lastName}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Username</label>
+                                                <input type="text" class="form-control" value="${user.username}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">New Password (leave blank to keep current)</label>
+                                                <input type="password" class="form-control" placeholder="Enter new password">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" value="${user.email}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Employee ID</label>
+                                                <input type="text" class="form-control" value="${user.employeeId}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Department</label>
+                                                <input type="text" class="form-control" value="${user.department}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Position</label>
+                                                <input type="text" class="form-control" value="${user.position}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Role</label>
+                                                <select class="form-select" required>
+                                                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>Employee</option>
+                                                    <option value="hod" ${user.role === 'hod' ? 'selected' : ''}>Head of Department</option>
+                                                    <option value="hr" ${user.role === 'hr' ? 'selected' : ''}>Human Resources</option>
+                                                    <option value="management" ${user.role === 'management' ? 'selected' : ''}>Senior Management</option>
+                                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Status</label>
+                                                <select class="form-select" required>
+                                                    <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+                                                    <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Annual Leave Balance</label>
+                                                <input type="number" class="form-control" value="${user.annualLeave}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Sick Leave Balance</label>
+                                                <input type="number" class="form-control" value="${user.sickLeave}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveUserChanges(${user.id})">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('editUserModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', html);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            modal.show();
+        }
+
+        function saveUserChanges(userId) {
+            const form = document.getElementById('editUserForm');
+            const inputs = form.querySelectorAll('input, select');
+            
+            const users = DataManager.getUsers();
+            const userIndex = users.findIndex(u => u.id === userId);
+            
+            if (userIndex === -1) {
+                showToast('User not found', 'error');
+                return;
+            }
+            
+            // Update user data
+            users[userIndex].firstName = inputs[0].value;
+            users[userIndex].lastName = inputs[1].value;
+            users[userIndex].username = inputs[2].value;
+            
+            // Update password only if provided
+            if (inputs[3].value) {
+                users[userIndex].password = inputs[3].value;
+            }
+            
+            users[userIndex].email = inputs[4].value;
+            users[userIndex].employeeId = inputs[5].value;
+            users[userIndex].department = inputs[6].value;
+            users[userIndex].position = inputs[7].value;
+            users[userIndex].role = inputs[8].value;
+            users[userIndex].status = inputs[9].value;
+            users[userIndex].annualLeave = parseInt(inputs[10].value);
+            users[userIndex].sickLeave = parseInt(inputs[11].value);
+            
+            DataManager.saveUsers(users);
+            
+            // Update current user if it's them
+            if (currentUser.id === userId) {
+                currentUser = users[userIndex];
+                DataManager.saveCurrentUser(currentUser);
+                updateUserUI();
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            loadEmployees();
+            showToast('User updated successfully');
+        }
+
+        // ==============================================
+        // LEAVE APPLICATION FUNCTIONS
+        // ==============================================
+
+        function setupLeaveApplication() {
+            // Set today's date as minimum
+            const today = new Date().toISOString().split('T')[0];
+            const leaveStartDate = document.getElementById('leaveStartDate');
+            const leaveEndDate = document.getElementById('leaveEndDate');
+            
+            if (leaveStartDate) leaveStartDate.min = today;
+            if (leaveEndDate) leaveEndDate.min = today;
+            
+            // Calculate days when dates change
+            if (leaveStartDate) {
+                leaveStartDate.addEventListener('change', calculateLeaveDaysForForm);
+                leaveEndDate.addEventListener('change', calculateLeaveDaysForForm);
+            }
+            
+            const leaveType = document.getElementById('leaveType');
+            if (leaveType) leaveType.addEventListener('change', calculateLeaveDaysForForm);
+            
+            // Update leave balance display
+            updateLeaveBalanceDisplay();
+            
+            // Setup form submission
+            const leaveApplicationForm = document.getElementById('leaveApplicationForm');
+            if (leaveApplicationForm) {
+                leaveApplicationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitLeaveApplication();
+                });
+            }
+        }
+
+        function updateLeaveBalanceDisplay() {
+            if (!currentUser) return;
+            
+            const balanceAnnual = document.getElementById('balanceAnnual');
+            const balanceSick = document.getElementById('balanceSick');
+            
+            if (balanceAnnual) {
+                balanceAnnual.textContent = 
+                    `${currentUser.annualLeave - currentUser.usedAnnual} days remaining`;
+            }
+            if (balanceSick) {
+                balanceSick.textContent = 
+                    `${currentUser.sickLeave - currentUser.usedSick} days remaining`;
+            }
+        }
+
+        function calculateLeaveDaysForForm() {
+            const startDate = document.getElementById('leaveStartDate')?.value;
+            const endDate = document.getElementById('leaveEndDate')?.value;
+            const leaveType = document.getElementById('leaveType')?.value;
+            
+            if (startDate && endDate && leaveType) {
+                const result = calculateLeaveDays(startDate, endDate, leaveType);
+                document.getElementById('totalDays').value = result.description;
+                document.getElementById('calendarDays').value = `${result.calendarDays} calendar days`;
+            } else {
+                document.getElementById('totalDays').value = '';
+                document.getElementById('calendarDays').value = '';
+            }
+        }
+
+        function applyLeave(type) {
+            showSection('apply-leave');
+            document.getElementById('leaveType').value = type;
+            
+            const reasons = {
+                'annual': 'Annual leave for rest and recreation',
+                'sick': 'Sick leave - medical attention required',
+                'paternity': 'Paternity leave for newborn child',
+                'maternity': 'Maternity leave for childbirth',
+                'unpaid': 'Unpaid leave for personal reasons',
+                'compassionate': 'Compassionate leave for bereavement'
+            };
+            
+            document.getElementById('leaveReason').placeholder = reasons[type] || 'Please provide reason for leave...';
+        }
+
+        function submitLeaveApplication() {
+            if (!currentUser || currentUser.role !== 'user') {
+                showToast('Only regular employees can apply for leave', 'error');
+                return;
+            }
+            
+            // Get form values
+            const leaveType = document.getElementById('leaveType').value;
+            const category = document.getElementById('leaveCategory').value;
+            const startDate = document.getElementById('leaveStartDate').value;
+            const endDate = document.getElementById('leaveEndDate').value;
+            const reason = document.getElementById('leaveReason').value;
+            const handoverNotes = document.getElementById('handoverNotes').value;
+            
+            // Validation
+            if (!leaveType || !startDate || !endDate || !reason) {
+                showToast('Please fill all required fields', 'warning');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                showToast('End date must be after start date', 'warning');
+                return;
+            }
+            
+            const result = calculateLeaveDays(startDate, endDate, leaveType);
+            const totalDays = result.workingDays;
+            
+            // Check leave balance
+            let balanceCheck = true;
+            let balanceMessage = '';
+            
+            switch(leaveType) {
+                case 'annual':
+                    if (totalDays > (currentUser.annualLeave - currentUser.usedAnnual)) {
+                        balanceCheck = false;
+                        balanceMessage = 'Insufficient annual leave balance';
+                    }
+                    break;
+                case 'sick':
+                    if (totalDays > (currentUser.sickLeave - currentUser.usedSick)) {
+                        balanceCheck = false;
+                        balanceMessage = 'Insufficient sick leave balance';
+                    }
+                    break;
+                case 'paternity':
+                    if (totalDays > (currentUser.paternityLeave - currentUser.usedPaternity)) {
+                        balanceCheck = false;
+                        balanceMessage = 'Insufficient paternity leave balance';
+                    }
+                    break;
+                case 'maternity':
+                    if (totalDays > (currentUser.maternityLeave - currentUser.usedMaternity)) {
+                        balanceCheck = false;
+                        balanceMessage = 'Insufficient maternity leave balance';
+                    }
+                    break;
+                case 'compassionate':
+                    if (totalDays > (currentUser.compassionateLeave - currentUser.usedCompassionate)) {
+                        balanceCheck = false;
+                        balanceMessage = 'Insufficient compassionate leave balance';
+                    }
+                    break;
+            }
+            
+            if (!balanceCheck) {
+                showToast(balanceMessage, 'warning');
+                return;
+            }
+            
+            // Create new leave application with approval workflow
+            const newLeave = {
+                id: generateId(),
+                employeeId: currentUser.id,
+                employeeName: `${currentUser.firstName} ${currentUser.lastName}`,
+                employeeEmail: currentUser.email,
+                employeeDept: currentUser.department,
+                type: leaveType,
+                category: category,
+                startDate: startDate,
+                endDate: endDate,
+                totalDays: result.calendarDays,
+                workingDays: result.workingDays,
+                reason: reason,
+                handoverNotes: handoverNotes,
+                status: 'pending',
+                approvalStage: 'hod', // Start with HOD approval
+                approvalWorkflow: {
+                    hod: { status: 'pending', date: null, by: null, comments: '' },
+                    hr: { status: 'pending', date: null, by: null, comments: '' },
+                    management: { status: 'pending', date: null, by: null, comments: '' }
+                },
+                appliedDate: new Date().toISOString().split('T')[0],
+                approvedDate: null,
+                approvedBy: null
+            };
+            
+            // Save leave application
+            const leaves = DataManager.getLeaves();
+            leaves.push(newLeave);
+            DataManager.saveLeaves(leaves);
+            
+            // Show success message
+            showToast('Leave application submitted successfully. Awaiting HOD approval.');
+            
+            // Reset form
+            document.getElementById('leaveApplicationForm').reset();
+            document.getElementById('totalDays').value = '';
+            document.getElementById('calendarDays').value = '';
+            
+            // Update dashboard
+            setTimeout(() => {
+                loadDashboard();
+                showSection('my-leaves');
+            }, 1000);
+        }
+
+        // ==============================================
+        // MY LEAVES FUNCTIONS
+        // ==============================================
+
+        function loadMyLeaves() {
+            if (!currentUser) return;
+            
+            const leaves = DataManager.getLeaves();
+            let myLeaves = [];
+            
+            if (currentUser.role === 'user') {
+                myLeaves = leaves.filter(leave => leave.employeeId === currentUser.id);
+            } else {
+                // For HOD, HR, Management, show leaves from their department/approval stage
+                switch(currentUser.role) {
+                    case 'hod':
+                        myLeaves = leaves.filter(leave => 
+                            leave.approvalStage === 'hod' && 
+                            leave.status === 'pending' &&
+                            leave.employeeDept === currentUser.department
+                        );
+                        break;
+                    case 'hr':
+                        myLeaves = leaves.filter(leave => 
+                            leave.approvalStage === 'hr' && 
+                            leave.status === 'pending'
+                        );
+                        break;
+                    case 'management':
+                        myLeaves = leaves.filter(leave => 
+                            leave.approvalStage === 'management' && 
+                            leave.status === 'pending'
+                        );
+                        break;
+                    case 'admin':
+                        myLeaves = leaves;
+                        break;
+                }
+            }
+            
+            updateMyLeavesTable(myLeaves);
+        }
+
+        function updateMyLeavesTable(leaves) {
+            const tbody = document.getElementById('myLeavesTable');
+            
+            let html = '';
+            if (leaves.length > 0) {
+                leaves.forEach(leave => {
+                    const stageText = {
+                        'hod': 'HOD Approval',
+                        'hr': 'HR Approval',
+                        'management': 'Management Approval',
+                        'approved': 'Approved',
+                        'rejected': 'Rejected'
+                    }[leave.approvalStage] || 'Pending';
+                    
+                    html += `
+                        <tr>
+                            <td>#LV${String(leave.id).padStart(6, '0')}</td>
+                            <td>
+                                <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                    ${getLeaveTypeName(leave.type)}
+                                </span>
+                            </td>
+                            <td>${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</td>
+                            <td>${leave.workingDays} working days</td>
+                            <td>
+                                <span class="status-badge ${getStatusClass(leave.status)}">
+                                    ${getStatusText(leave.status)}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge ${leave.approvalStage === 'hod' ? 'badge-hod' : leave.approvalStage === 'hr' ? 'badge-hr' : leave.approvalStage === 'management' ? 'badge-management' : getStatusClass(leave.status)}">
+                                    ${stageText}
+                                </span>
+                            </td>
+                            <td>${formatDate(leave.appliedDate)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLeaveDetails(${leave.id})" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                ${leave.status === 'pending' && currentUser.role === 'user' ? `
+                                    <button class="btn btn-sm btn-outline-danger" onclick="cancelLeave(${leave.id})" title="Cancel">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="bi bi-calendar-x fs-4 d-block mb-2"></i>
+                            No leave applications found
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        function viewLeaveDetails(leaveId) {
+            const leaves = DataManager.getLeaves();
+            const users = DataManager.getUsers();
+            const leave = leaves.find(l => l.id === leaveId);
+            
+            if (!leave) {
+                showToast('Leave not found', 'error');
+                return;
+            }
+            
+            const user = users.find(u => u.id === leave.employeeId);
+            
+            // Build approval workflow display
+            let approvalHtml = `
+                <div class="approval-steps mb-4">
+                    <div class="approval-step ${leave.approvalWorkflow.hod.status === 'approved' ? 'completed' : leave.approvalStage === 'hod' ? 'current' : ''}">
+                        <div class="step-number">1</div>
+                        <div>HOD Approval</div>
+                        <small>${leave.approvalWorkflow.hod.date ? formatDate(leave.approvalWorkflow.hod.date) : 'Pending'}</small>
+                    </div>
+                    <div class="approval-step ${leave.approvalWorkflow.hr.status === 'approved' ? 'completed' : leave.approvalStage === 'hr' ? 'current' : ''}">
+                        <div class="step-number">2</div>
+                        <div>HR Approval</div>
+                        <small>${leave.approvalWorkflow.hr.date ? formatDate(leave.approvalWorkflow.hr.date) : 'Pending'}</small>
+                    </div>
+                    <div class="approval-step ${leave.approvalWorkflow.management.status === 'approved' ? 'completed' : leave.approvalStage === 'management' ? 'current' : ''}">
+                        <div class="step-number">3</div>
+                        <div>Management Approval</div>
+                        <small>${leave.approvalWorkflow.management.date ? formatDate(leave.approvalWorkflow.management.date) : 'Pending'}</small>
+                    </div>
+                    <div class="approval-line"></div>
+                </div>
+            `;
+            
+            const content = `
+                <div class="mb-3">
+                    <h5>${getLeaveTypeName(leave.type)} Application</h5>
+                    <p class="text-muted">Application #LV${String(leave.id).padStart(6, '0')}</p>
+                </div>
+                
+                ${approvalHtml}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Employee:</strong><br>
+                        ${leave.employeeName}<br>
+                        <small class="text-muted">${user?.position || ''} • ${leave.employeeDept}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Period:</strong><br>
+                        ${formatDate(leave.startDate)} to ${formatDate(leave.endDate)}<br>
+                        <small class="text-muted">${leave.workingDays} working days (${leave.totalDays} calendar days)</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Leave Type:</strong><br>
+                        <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                            ${getLeaveTypeName(leave.type)} • ${leave.category === 'half' ? 'Half Day' : leave.category === 'full' ? 'Full Day' : 'Multiple Days'}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong><br>
+                        <span class="status-badge ${getStatusClass(leave.status)}">
+                            ${getStatusText(leave.status)}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Reason:</strong><br>
+                    <p class="p-3 bg-light rounded">${leave.reason}</p>
+                </div>
+                
+                ${leave.handoverNotes ? `
+                <div class="mb-3">
+                    <strong>Handover Notes:</strong><br>
+                    <p class="p-3 bg-light rounded">${leave.handoverNotes}</p>
+                </div>
+                ` : ''}
+                
+                <div class="mb-3">
+                    <strong>Applied Date:</strong><br>
+                    ${formatDate(leave.appliedDate)}
+                </div>
+                
+                ${leave.approvedDate ? `
+                <div class="mb-3">
+                    <strong>Approved Date:</strong><br>
+                    ${formatDate(leave.approvedDate)}
+                </div>
+                ` : ''}
+                
+                ${leave.approvedBy ? `
+                <div class="mb-3">
+                    <strong>Approved By:</strong><br>
+                    ${leave.approvedBy}
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('leaveDetailsContent').innerHTML = content;
+            
+            // Set up action buttons
+            const footer = document.getElementById('leaveDetailsFooter');
+            let footerHtml = '<button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+            
+            // Check if current user can approve this leave based on their role and current stage
+            const canApprove = (
+                (currentUser.role === 'hod' && leave.approvalStage === 'hod' && leave.employeeDept === currentUser.department) ||
+                (currentUser.role === 'hr' && leave.approvalStage === 'hr') ||
+                (currentUser.role === 'management' && leave.approvalStage === 'management') ||
+                currentUser.role === 'admin' // Admin can approve at any stage
+            );
+            
+            if (canApprove && leave.status === 'pending') {
+                footerHtml = `
+                    <button class="btn btn-success" onclick="approveLeaveStage(${leave.id})">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button class="btn btn-danger" onclick="rejectLeave(${leave.id})">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                `;
+            }
+            
+            footer.innerHTML = footerHtml;
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewLeaveModal'));
+            modal.show();
+        }
+
+        function cancelLeave(leaveId) {
+            showConfirmation(
+                'Cancel Leave',
+                'Are you sure you want to cancel this leave application?',
+                () => {
+                    const leaves = DataManager.getLeaves();
+                    const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+                    
+                    if (leaveIndex !== -1) {
+                        leaves[leaveIndex].status = 'cancelled';
+                        DataManager.saveLeaves(leaves);
+                        
+                        loadMyLeaves();
+                        showToast('Leave application cancelled');
+                    }
+                }
+            );
+        }
+
+        // ==============================================
+        // APPROVAL FUNCTIONS - ADMIN HAS FULL ACCESS
+        // ==============================================
+
+        function approveLeaveStage(leaveId) {
+            const comments = prompt('Enter approval comments (optional):');
+            
+            showConfirmation(
+                'Approve Leave',
+                'Are you sure you want to approve this leave request?',
+                () => {
+                    const leaves = DataManager.getLeaves();
+                    const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+                    
+                    if (leaveIndex !== -1) {
+                        const leave = leaves[leaveIndex];
+                        const currentStage = leave.approvalStage;
+                        
+                        // Update current stage
+                        leave.approvalWorkflow[currentStage] = {
+                            status: 'approved',
+                            date: new Date().toISOString().split('T')[0],
+                            by: `${currentUser.firstName} ${currentUser.lastName}`,
+                            comments: comments || ''
+                        };
+                        
+                        // Move to next stage or finalize approval
+                        if (currentStage === 'hod') {
+                            leave.approvalStage = 'hr';
+                        } else if (currentStage === 'hr') {
+                            leave.approvalStage = 'management';
+                        } else if (currentStage === 'management') {
+                            leave.status = 'approved';
+                            leave.approvalStage = 'approved';
+                            leave.approvedDate = new Date().toISOString().split('T')[0];
+                            leave.approvedBy = `${currentUser.firstName} ${currentUser.lastName}`;
+                            
+                            // Update employee's used leave balance
+                            const users = DataManager.getUsers();
+                            const userIndex = users.findIndex(u => u.id === leave.employeeId);
+                            
+                            if (userIndex !== -1) {
+                                const user = users[userIndex];
+                                const fieldMap = {
+                                    'annual': 'usedAnnual',
+                                    'sick': 'usedSick',
+                                    'paternity': 'usedPaternity',
+                                    'maternity': 'usedMaternity',
+                                    'compassionate': 'usedCompassionate'
+                                };
+                                
+                                const field = fieldMap[leave.type];
+                                if (field) {
+                                    user[field] += leave.workingDays;
+                                    DataManager.saveUsers(users);
+                                    
+                                    // Update current user if it's them
+                                    if (currentUser.id === leave.employeeId) {
+                                        currentUser[field] = user[field];
+                                        DataManager.saveCurrentUser(currentUser);
+                                        updateLeaveBalanceDisplay();
+                                    }
+                                }
+                            }
+                        }
+                        
+                        DataManager.saveLeaves(leaves);
+                        
+                        // Refresh data
+                        loadApprovals();
+                        loadDashboard();
+                        loadMyLeaves();
+                        loadHODApprovals();
+                        loadHRApprovals();
+                        loadManagementApprovals();
+                        if (calendar) {
+                            loadCalendar();
+                        }
+                        
+                        // Close modal if open
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('viewLeaveModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        showToast('Leave approved successfully');
+                    }
+                }
+            );
+        }
+
+        function rejectLeave(leaveId) {
+            const reason = prompt('Please enter rejection reason:');
+            
+            if (reason) {
+                showConfirmation(
+                    'Reject Leave',
+                    'Are you sure you want to reject this leave request?',
+                    () => {
+                        const leaves = DataManager.getLeaves();
+                        const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+                        
+                        if (leaveIndex !== -1) {
+                            const leave = leaves[leaveIndex];
+                            const currentStage = leave.approvalStage;
+                            
+                            // Update current stage with rejection
+                            leave.approvalWorkflow[currentStage] = {
+                                status: 'rejected',
+                                date: new Date().toISOString().split('T')[0],
+                                by: `${currentUser.firstName} ${currentUser.lastName}`,
+                                comments: reason
+                            };
+                            
+                            leave.status = 'rejected';
+                            leave.approvalStage = 'rejected';
+                            
+                            DataManager.saveLeaves(leaves);
+                            
+                            loadApprovals();
+                            loadDashboard();
+                            loadMyLeaves();
+                            loadHODApprovals();
+                            loadHRApprovals();
+                            loadManagementApprovals();
+                            showToast(`Leave rejected`);
+                            
+                            // Close modal if open
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('viewLeaveModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }
+                    }
+                );
+            }
+        }
+
+        // ==============================================
+        // APPROVALS SECTION
+        // ==============================================
+
+        function loadApprovals() {
+            const leaves = DataManager.getLeaves();
+            
+            loadPendingApprovals(leaves);
+            loadApprovedLeaves(leaves);
+            loadRejectedLeaves(leaves);
+            
+            setupApprovalTabs();
+            updateApprovalCounts(leaves);
+        }
+
+        function setupApprovalTabs() {
+            document.querySelectorAll('#approvalTabs button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    
+                    // Hide all content
+                    document.getElementById('pendingApprovalsContent').style.display = 'none';
+                    document.getElementById('approvedLeavesContent').style.display = 'none';
+                    document.getElementById('rejectedLeavesContent').style.display = 'none';
+                    
+                    // Show selected content
+                    if (tab === 'pending') {
+                        document.getElementById('pendingApprovalsContent').style.display = 'block';
+                    } else if (tab === 'approved') {
+                        document.getElementById('approvedLeavesContent').style.display = 'block';
+                    } else if (tab === 'rejected') {
+                        document.getElementById('rejectedLeavesContent').style.display = 'block';
+                    }
+                    
+                    // Update active tab
+                    document.querySelectorAll('#approvalTabs button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function updateApprovalCounts(leaves) {
+            const pendingCount = leaves.filter(l => l.status === 'pending').length;
+            const approvedCount = leaves.filter(l => l.status === 'approved').length;
+            const rejectedCount = leaves.filter(l => l.status === 'rejected').length;
+            
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('approvedCount').textContent = approvedCount;
+            document.getElementById('rejectedCount').textContent = rejectedCount;
+        }
+
+        function loadPendingApprovals(leaves) {
+            const container = document.getElementById('pendingApprovalsList');
+            let pendingLeaves = leaves.filter(leave => leave.status === 'pending');
+            
+            // Filter based on user role
+            if (currentUser.role === 'hod') {
+                pendingLeaves = pendingLeaves.filter(leave => 
+                    leave.approvalStage === 'hod' && 
+                    leave.employeeDept === currentUser.department
+                );
+            } else if (currentUser.role === 'hr') {
+                pendingLeaves = pendingLeaves.filter(leave => leave.approvalStage === 'hr');
+            } else if (currentUser.role === 'management') {
+                pendingLeaves = pendingLeaves.filter(leave => leave.approvalStage === 'management');
+            } else if (currentUser.role === 'user') {
+                pendingLeaves = pendingLeaves.filter(leave => leave.employeeId === currentUser.id);
+            }
+            // Admin sees all
+            
+            let html = '';
+            if (pendingLeaves.length > 0) {
+                pendingLeaves.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    const stageText = {
+                        'hod': 'Awaiting HOD Approval',
+                        'hr': 'Awaiting HR Approval',
+                        'management': 'Awaiting Management Approval'
+                    }[leave.approvalStage] || 'Pending';
+                    
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 approval-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</h6>
+                                            <p class="text-muted mb-1">${leave.employeeDept} • ${getLeaveTypeName(leave.type)}</p>
+                                        </div>
+                                        <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                            ${leave.workingDays} days
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <p><strong>Stage:</strong> ${stageText}</p>
+                                        <p><strong>Period:</strong> ${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</p>
+                                        <p><strong>Reason:</strong> ${leave.reason.substring(0, 100)}${leave.reason.length > 100 ? '...' : ''}</p>
+                                        <p><strong>Applied:</strong> ${formatDate(leave.appliedDate)}</p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success flex-grow-1" onclick="viewLeaveDetails(${leave.id})">
+                                            <i class="bi bi-eye"></i> Review
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = `
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-check2-circle fs-1 text-success mb-3"></i>
+                            <h4>No pending approvals</h4>
+                            <p class="text-muted">All leave requests have been processed</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function loadApprovedLeaves(leaves) {
+            const container = document.getElementById('approvedLeavesList');
+            let approvedLeaves = leaves.filter(leave => leave.status === 'approved');
+            
+            // Filter based on user role
+            if (currentUser.role === 'user') {
+                approvedLeaves = approvedLeaves.filter(leave => leave.employeeId === currentUser.id);
+            } else if (currentUser.role === 'hod') {
+                approvedLeaves = approvedLeaves.filter(leave => leave.employeeDept === currentUser.department);
+            }
+            
+            let html = '';
+            if (approvedLeaves.length > 0) {
+                approvedLeaves.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    const approvedByUser = DataManager.getUsers().find(u => 
+                        `${u.firstName} ${u.lastName}` === leave.approvedBy
+                    );
+                    
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 approved-leave-item">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</h6>
+                                            <p class="text-muted mb-1">${leave.employeeDept} • ${getLeaveTypeName(leave.type)}</p>
+                                        </div>
+                                        <span class="badge bg-success">
+                                            Approved
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <p><strong>Period:</strong> ${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</p>
+                                        <p><strong>Approved By:</strong> ${approvedByUser ? approvedByUser.firstName + ' ' + approvedByUser.lastName : leave.approvedBy || 'System'}</p>
+                                        <p><strong>Approved Date:</strong> ${formatDate(leave.approvedDate)}</p>
+                                        <p><strong>Duration:</strong> ${leave.workingDays} working days</p>
+                                        <p><strong>Approval Comments:</strong> ${leave.approvalWorkflow.management?.comments || leave.approvalWorkflow.hr?.comments || leave.approvalWorkflow.hod?.comments || 'No comments'}</p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-info" onclick="viewLeaveDetails(${leave.id})">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = `
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                            <h4>No approved leaves</h4>
+                            <p class="text-muted">Approved leaves will appear here</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function loadRejectedLeaves(leaves) {
+            const container = document.getElementById('rejectedLeavesList');
+            let rejectedLeaves = leaves.filter(leave => leave.status === 'rejected');
+            
+            // Filter based on user role
+            if (currentUser.role === 'user') {
+                rejectedLeaves = rejectedLeaves.filter(leave => leave.employeeId === currentUser.id);
+            } else if (currentUser.role === 'hod') {
+                rejectedLeaves = rejectedLeaves.filter(leave => leave.employeeDept === currentUser.department);
+            }
+            
+            let html = '';
+            if (rejectedLeaves.length > 0) {
+                rejectedLeaves.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    
+                    // Find who rejected it
+                    let rejectedBy = 'System';
+                    let rejectionReason = 'Not specified';
+                    let rejectionDate = 'N/A';
+                    
+                    if (leave.approvalWorkflow.hod.status === 'rejected') {
+                        rejectedBy = 'HOD';
+                        rejectionReason = leave.approvalWorkflow.hod.comments;
+                        rejectionDate = leave.approvalWorkflow.hod.date;
+                    } else if (leave.approvalWorkflow.hr.status === 'rejected') {
+                        rejectedBy = 'HR';
+                        rejectionReason = leave.approvalWorkflow.hr.comments;
+                        rejectionDate = leave.approvalWorkflow.hr.date;
+                    } else if (leave.approvalWorkflow.management.status === 'rejected') {
+                        rejectedBy = 'Management';
+                        rejectionReason = leave.approvalWorkflow.management.comments;
+                        rejectionDate = leave.approvalWorkflow.management.date;
+                    }
+                    
+                    html += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 rejected-leave-item">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</h6>
+                                            <p class="text-muted mb-1">${leave.employeeDept} • ${getLeaveTypeName(leave.type)}</p>
+                                        </div>
+                                        <span class="badge bg-danger">
+                                            Rejected
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <p><strong>Period:</strong> ${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</p>
+                                        <p><strong>Rejected By:</strong> ${rejectedBy}</p>
+                                        <p><strong>Rejection Date:</strong> ${formatDate(rejectionDate)}</p>
+                                        <p><strong>Rejection Reason:</strong> ${rejectionReason}</p>
+                                        <p><strong>Duration:</strong> ${leave.workingDays} working days</p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-info" onclick="viewLeaveDetails(${leave.id})">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </button>
+                                        ${currentUser.role === 'user' && leave.status === 'rejected' ? `
+                                        <button class="btn btn-outline-primary" onclick="resubmitLeave(${leave.id})">
+                                            <i class="bi bi-arrow-clockwise"></i> Resubmit
+                                        </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = `
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                            <h4>No rejected leaves</h4>
+                            <p class="text-muted">Rejected leaves will appear here</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function resubmitLeave(leaveId) {
+            showConfirmation(
+                'Resubmit Leave',
+                'Are you sure you want to resubmit this rejected leave application?',
+                () => {
+                    const leaves = DataManager.getLeaves();
+                    const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+                    
+                    if (leaveIndex !== -1) {
+                        const leave = leaves[leaveIndex];
+                        
+                        // Reset the leave to pending status
+                        leave.status = 'pending';
+                        leave.approvalStage = 'hod';
+                        
+                        // Reset approval workflow
+                        leave.approvalWorkflow = {
+                            hod: { status: 'pending', date: null, by: null, comments: '' },
+                            hr: { status: 'pending', date: null, by: null, comments: '' },
+                            management: { status: 'pending', date: null, by: null, comments: '' }
+                        };
+                        
+                        leave.approvedDate = null;
+                        leave.approvedBy = null;
+                        
+                        DataManager.saveLeaves(leaves);
+                        
+                        // Refresh data
+                        loadApprovals();
+                        loadMyLeaves();
+                        showToast('Leave application resubmitted successfully');
+                    }
+                }
+            );
+        }
+
+        // ==============================================
+        // HOD, HR, MANAGEMENT SECTIONS
+        // ==============================================
+
+        function loadHODApprovals() {
+            if (currentUser.role !== 'hod' && currentUser.role !== 'admin') return;
+            
+            const leaves = DataManager.getLeaves();
+            const hodApprovals = leaves.filter(leave => 
+                leave.approvalStage === 'hod' && 
+                leave.status === 'pending' &&
+                (currentUser.role === 'admin' || leave.employeeDept === currentUser.department)
+            );
+            
+            const tbody = document.getElementById('hodApprovalsTable');
+            let html = '';
+            
+            if (hodApprovals.length > 0) {
+                hodApprovals.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    html += `
+                        <tr>
+                            <td>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</td>
+                            <td>${leave.employeeDept}</td>
+                            <td>
+                                <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                    ${getLeaveTypeName(leave.type)}
+                                </span>
+                            </td>
+                            <td>${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</td>
+                            <td>${leave.workingDays} days</td>
+                            <td>${formatDate(leave.appliedDate)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLeaveDetails(${leave.id})">
+                                    <i class="bi bi-eye"></i> Review
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-check2-circle fs-4 d-block mb-2"></i>
+                            No pending HOD approvals
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        function loadHRApprovals() {
+            if (currentUser.role !== 'hr' && currentUser.role !== 'admin') return;
+            
+            const leaves = DataManager.getLeaves();
+            const hrApprovals = leaves.filter(leave => 
+                leave.approvalStage === 'hr' && 
+                leave.status === 'pending'
+            );
+            
+            const tbody = document.getElementById('hrApprovalsTable');
+            let html = '';
+            
+            if (hrApprovals.length > 0) {
+                hrApprovals.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    const hodApproval = leave.approvalWorkflow.hod;
+                    
+                    html += `
+                        <tr>
+                            <td>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</td>
+                            <td>${leave.employeeDept}</td>
+                            <td>
+                                <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                    ${getLeaveTypeName(leave.type)}
+                                </span>
+                            </td>
+                            <td>${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</td>
+                            <td>${leave.workingDays} days</td>
+                            <td>
+                                <span class="badge ${hodApproval.status === 'approved' ? 'bg-success' : 'bg-warning'}">
+                                    ${hodApproval.status === 'approved' ? 'Approved' : 'Pending'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLeaveDetails(${leave.id})">
+                                    <i class="bi bi-eye"></i> Review
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-check2-circle fs-4 d-block mb-2"></i>
+                            No pending HR approvals
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        function loadManagementApprovals() {
+            if (currentUser.role !== 'management' && currentUser.role !== 'admin') return;
+            
+            const leaves = DataManager.getLeaves();
+            const managementApprovals = leaves.filter(leave => 
+                leave.approvalStage === 'management' && 
+                leave.status === 'pending'
+            );
+            
+            const tbody = document.getElementById('managementApprovalsTable');
+            let html = '';
+            
+            if (managementApprovals.length > 0) {
+                managementApprovals.forEach(leave => {
+                    const user = DataManager.getUsers().find(u => u.id === leave.employeeId);
+                    const hodApproval = leave.approvalWorkflow.hod;
+                    const hrApproval = leave.approvalWorkflow.hr;
+                    
+                    html += `
+                        <tr>
+                            <td>${user ? user.firstName + ' ' + user.lastName : leave.employeeName}</td>
+                            <td>${leave.employeeDept}</td>
+                            <td>
+                                <span class="leave-type-badge ${getLeaveTypeBadge(leave.type)}">
+                                    ${getLeaveTypeName(leave.type)}
+                                </span>
+                            </td>
+                            <td>${formatDate(leave.startDate)} - ${formatDate(leave.endDate)}</td>
+                            <td>${leave.workingDays} days</td>
+                            <td>
+                                <span class="badge ${hodApproval.status === 'approved' ? 'bg-success' : 'bg-warning'}">
+                                    ${hodApproval.status === 'approved' ? 'Approved' : 'Pending'}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge ${hrApproval.status === 'approved' ? 'bg-success' : 'bg-warning'}">
+                                    ${hrApproval.status === 'approved' ? 'Approved' : 'Pending'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLeaveDetails(${leave.id})">
+                                    <i class="bi bi-eye"></i> Review
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="bi bi-check2-circle fs-4 d-block mb-2"></i>
+                            No pending management approvals
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        // ==============================================
+        // PROFILE FUNCTIONS
+        // ==============================================
+
+        function loadProfile() {
+            const container = document.getElementById('profileContent');
+            
+            const html = `
+                <div class="profile-section ${currentUser.role === 'hod' ? 'hod-profile' : currentUser.role === 'hr' ? 'hr-profile' : currentUser.role === 'management' ? 'management-profile' : 'user-profile'}">
+                    <div class="row">
+                        <div class="col-md-4">  
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="avatar mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2rem;">
+                                        ${currentUser.firstName[0]}${currentUser.lastName[0]}
+                                    </div>
+                                    <h4>${currentUser.firstName} ${currentUser.lastName}</h4>
+                                    <p class="text-muted">${currentUser.position}</p>
+                                    <span class="${getRoleBadgeClass(currentUser.role)}">
+                                        ${getRoleText(currentUser.role)}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-calendar-check me-2"></i> Leave Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <small>Annual Leave</small>
+                                        <div class="d-flex justify-content-between">
+                                            <span>${currentUser.annualLeave - currentUser.usedAnnual} days remaining</span>
+                                            <span class="text-muted">${currentUser.usedAnnual} used</span>
+                                        </div>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar bg-primary" style="width: ${((currentUser.usedAnnual) / currentUser.annualLeave) * 100}%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small>Sick Leave</small>
+                                        <div class="d-flex justify-content-between">
+                                            <span>${currentUser.sickLeave - currentUser.usedSick} days remaining</span>
+                                            <span class="text-muted">${currentUser.usedSick} used</span>
+                                        </div>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar bg-success" style="width: ${((currentUser.usedSick) / currentUser.sickLeave) * 100}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i> My Profile</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="userProfileForm" onsubmit="updateProfile(event)">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">First Name</label>
+                                                <input type="text" class="form-control" value="${currentUser.firstName}" id="profileFirstName">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" value="${currentUser.lastName}" id="profileLastName">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" value="${currentUser.email}" id="profileEmail">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Employee ID</label>
+                                                <input type="text" class="form-control" value="${currentUser.employeeId}" readonly>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Department</label>
+                                                <input type="text" class="form-control" value="${currentUser.department}" ${currentUser.role !== 'admin' ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Position</label>
+                                                <input type="text" class="form-control" value="${currentUser.position}" id="profilePosition">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">New Password</label>
+                                                <input type="password" class="form-control" placeholder="Enter new password" id="profilePassword">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Confirm Password</label>
+                                                <input type="password" class="form-control" placeholder="Confirm new password" id="profileConfirmPassword">
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function updateProfile(event) {
+            event.preventDefault();
+            
+            const firstName = document.getElementById('profileFirstName').value;
+            const lastName = document.getElementById('profileLastName').value;
+            const email = document.getElementById('profileEmail').value;
+            const position = document.getElementById('profilePosition').value;
+            const password = document.getElementById('profilePassword').value;
+            const confirmPassword = document.getElementById('profileConfirmPassword').value;
+            
+            // Validate passwords match if provided
+            if (password && password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+            
+            // Update user data
+            const users = DataManager.getUsers();
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            
+            if (userIndex !== -1) {
+                users[userIndex].firstName = firstName;
+                users[userIndex].lastName = lastName;
+                users[userIndex].email = email;
+                users[userIndex].position = position;
+                
+                // Update password only if provided
+                if (password) {
+                    users[userIndex].password = password;
+                }
+                
+                DataManager.saveUsers(users);
+                
+                // Update current user
+                currentUser = users[userIndex];
+                DataManager.saveCurrentUser(currentUser);
+                updateUserUI();
+                
+                showToast('Profile updated successfully');
+            }
+        }
+
+        // ==============================================
+        // CALENDAR FUNCTIONS
+        // ==============================================
+
+        function loadCalendar() {
+            if (!calendar) {
+                const calendarEl = document.getElementById('calendarContainer');
+                
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: false,
+                    events: getCalendarEvents(),
+                    eventClick: function(info) {
+                        const leaveId = parseInt(info.event.id);
+                        viewLeaveDetails(leaveId);
+                    },
+                    eventDidMount: function(info) {
+                        info.el.title = `${info.event.title}\n${info.event.extendedProps.description || ''}`;
+                    },
+                    editable: false,
+                    selectable: false,
+                    dayMaxEvents: true,
+                    height: 'auto'
+                });
+                
+                calendar.render();
+                
+                setupCalendarControls();
+            } else {
+                calendar.removeAllEvents();
+                calendar.addEventSource(getCalendarEvents());
+                calendar.render();
+            }
+        }
+
+        function getCalendarEvents() {
+            const leaves = DataManager.getLeaves();
+            return leaves.filter(leave => leave.status === 'approved').map(leave => ({
+                id: leave.id.toString(),
+                title: `${leave.employeeName} - ${getLeaveTypeName(leave.type)}`,
+                start: leave.startDate,
+                end: luxon.DateTime.fromISO(leave.endDate).plus({ days: 1 }).toISODate(),
+                color: getLeaveTypeColor(leave.type),
+                extendedProps: {
+                    description: leave.reason
+                }
+            }));
+        }
+
+        function setupCalendarControls() {
+            document.getElementById('calendarPrev').addEventListener('click', function() {
+                calendar.prev();
+            });
+            
+            document.getElementById('calendarNext').addEventListener('click', function() {
+                calendar.next();
+            });
+            
+            document.getElementById('calendarToday').addEventListener('click', function() {
+                calendar.today();
+            });
+            
+            document.getElementById('addEventBtn').addEventListener('click', function() {
+                showSection('apply-leave');
+            });
+        }
+
+        // ==============================================
+        // SECTION DATA LOADING
+        // ==============================================
+
+        function loadSectionData(sectionId) {
+            switch(sectionId) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'calendar':
+                    loadCalendar();
+                    break;
+                case 'employees':
+                    loadEmployees();
+                    break;
+                case 'my-leaves':
+                    loadMyLeaves();
+                    break;
+                case 'approvals':
+                    loadApprovals();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'hod-section':
+                    loadHODApprovals();
+                    break;
+                case 'hr-section':
+                    loadHRApprovals();
+                    break;
+                case 'management-section':
+                    loadManagementApprovals();
+                    break;
+            }
+        }
+
+        // ==============================================
+        // UTILITY FUNCTIONS
+        // ==============================================
+
+        function exportData() {
+            const leaves = DataManager.getLeaves();
+            let csv = 'Application ID,Employee,Department,Leave Type,Start Date,End Date,Working Days,Status,Stage,Applied Date\n';
+            
+            leaves.forEach(leave => {
+                csv += `LV${String(leave.id).padStart(6, '0')},${leave.employeeName},${leave.employeeDept},${getLeaveTypeName(leave.type)},${leave.startDate},${leave.endDate},${leave.workingDays},${getStatusText(leave.status)},${leave.approvalStage},${leave.appliedDate}\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'leaves_kenya.csv';
+            a.click();
+            
+            showToast('Data exported to CSV');
+        }
+
+        function generateReport() {
+            showToast('Report generation started...', 'info');
+        }
+
+        // ==============================================
+        // INITIALIZATION
+        // ==============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize login page
+            initializeLogin();
+        });
+    </script>
+</body>
+</html>
